@@ -61,6 +61,11 @@ public struct Token: Equatable {
         let currentTime = Date()
         return try? generator.password(at: currentTime)
     }
+    
+    public var currentUntruncatedPassword: String? {
+        let currentTime = Date()
+        return try? generator.untruncatedPassword(at: currentTime)
+    }
 
     // MARK: Update
 

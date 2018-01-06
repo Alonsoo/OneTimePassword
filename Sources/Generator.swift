@@ -101,6 +101,27 @@ public struct Generator: Equatable {
         // Pad the string representation with zeros, if necessary
         return String(truncatedHash).padded(with: "0", toLength: digits)
     }
+    
+    
+    public func untruncatedPassword(at time: Date) throws -> String {
+        guard Generator.validateDigits(digits) else {
+            throw Error.invalidDigits
+        }
+        
+        let counter = try factor.counterValue(at: time)
+        // Ensure the counter value is big-endian
+        var bigCounter = counter.bigEndian
+        
+        // Generate an HMAC value from the key and counter
+        let counterData = Data(bytes: &bigCounter, count: MemoryLayout<UInt64>.size)
+        
+        let hash = HMAC(algorithm: algorithm, key: secret, data: counterData)
+        
+        let base64String = hash.base64EncodedString()
+        
+        return base64String
+    }
+
 
     // MARK: Update
 
@@ -218,7 +239,7 @@ private extension Generator {
     static func validateDigits(_ digits: Int) -> Bool {
         // https://tools.ietf.org/html/rfc4226#section-5.3 states "Implementations MUST extract a
         // 6-digit code at a minimum and possibly 7 and 8-digit codes."
-        let acceptableDigits = 6...8
+        let acceptableDigits = 6...20
         return acceptableDigits.contains(digits)
     }
 
